@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Network Monitoring Simulation</title>
+    <style>
+        :root {
+            --il: #0038b8;  /* Israel Flag Blue */
+            --ma: #c1272d;  /* Morocco Flag Red */
+            --dz: #006233; /* Algeria Flag Green */
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #fff;
+            font-family: 'Consolas', monospace;
+            margin: 0;
+        }
+
+        .device-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 15px;
+            margin: 10px;
+            border-radius: 5px;
+            position: relative;
+            transition: transform 0.3s;
+        }
+
+        .device-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .flag {
+            width: 35px;
+            height: 25px;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-size: cover;
+            border: 1px solid #444;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .online { background: #00ff00; box-shadow: 0 0 8px #00ff00; }
+        .offline { background: #ff0000; box-shadow: 0 0 8px #ff0000; }
+
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            padding: 20px;
+            gap: 15px;
+        }
+
+        .auth-panel {
+            background: #000;
+            border: 2px solid #333;
+            width: 350px;
+            padding: 25px;
+            margin: 100px auto;
+            text-align: center;
+        }
+
+        #search {
+            background: #111;
+            color: #fff;
+            border: 1px solid #333;
+            padding: 8px;
+            width: 300px;
+            margin: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-panel" id="login">
+        <h3>SECURE ACCESS GATEWAY</h3>
+        <input type="password" placeholder="Enter Authorization Token" 
+               style="margin: 15px; padding: 8px; width: 80%;">
+        <button onclick="initializeSystem()" 
+                style="background: #222; color: #fff; border: 1px solid #444; padding: 8px 20px;">
+            AUTHENTICATE
+        </button>
+    </div>
+
+    <div id="dashboard" style="display: none;">
+        <div style="padding: 20px; background: #000; border-bottom: 2px solid #333;">
+            <h2>ACTIVE ENDPOINTS: <span id="count">1000</span></h2>
+            <input type="text" id="search" placeholder="Search by IP/Country...">
+        </div>
+        <div id="grid"></div>
+    </div>
+
+<script>
+const endpoints = Array.from({length: 1000}, (_, index) => ({
+    id: index + 1,
+    country: ['il', 'ma', 'dz'][Math.floor(Math.random() * 3)],
+    status: Math.random() > 0.15 ? 'online' : 'offline',
+    ip: `10.${rand(255)}.${rand(255)}.${rand(255)}`,
+    lastPing: `${rand(60)} minutes ago`
+}));
+
+function rand(max) { return Math.floor(Math.random() * max) }
+
+function initializeSystem() {
+    document.getElementById('login').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    refreshGrid();
+}
+
+function refreshGrid(filter = '') {
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
+    
+    endpoints.filter(device => 
+        device.ip.includes(filter) ||
+        device.country.includes(filter.toLowerCase())
+    ).forEach(device => {
+        const card = document.createElement('div');
+        card.className = 'device-card';
+        card.innerHTML = `
+            <div class="status-indicator ${device.status}"></div>
+            <span style="color: #${device.status === 'online' ? '0f0' : 'f00'}">
+                ${device.ip}
+            </span>
+            <div class="flag" 
+                 style="background-image: url('https://flagcdn.com/${device.country}.svg')">
+            </div>
+            <div style="margin-top: 10px;">
+                <div>Location: ${countryName(device.country)}</div>
+                <div>Last Activity: ${device.lastPing}</div>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+    document.getElementById('count').textContent = endpoints.length;
+}
+
+function countryName(code) {
+    return {
+        'il': 'Israel', 
+        'ma': 'Morocco', 
+        'dz': 'Algeria'
+    }[code];
+}
+
+document.getElementById('search').addEventListener('input', (e) => {
+    refreshGrid(e.target.value);
+});
+</script>
+</body>
+</html>
