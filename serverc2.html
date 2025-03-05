@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CyberJihad Network Operations</title>
+    <style>
+        :root {
+            --il: #0038b8;  /* Israel */
+            --ma: #c1272d;  /* Morocco */
+            --dz: #006233;  /* Algeria */
+            --hacker-green: #00ff00;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: var(--hacker-green);
+            font-family: 'Consolas', monospace;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .device-card {
+            background: #0a1a0a;
+            border: 1px solid #004400;
+            padding: 15px;
+            margin: 10px;
+            border-radius: 3px;
+            position: relative;
+            transition: all 0.3s;
+            box-shadow: 0 0 5px #002200;
+        }
+
+        .device-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 15px #00ff00;
+        }
+
+        .flag {
+            width: 35px;
+            height: 25px;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            border: 1px solid #004400;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .online { background: #00ff00; box-shadow: 0 0 8px #00ff00; }
+        .offline { background: #ff0000; box-shadow: 0 0 8px #ff0000; }
+        .compromised { background: #ffa500; box-shadow: 0 0 8px #ffa500; }
+
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            padding: 20px;
+            gap: 15px;
+        }
+
+        .auth-panel {
+            background: #000;
+            border: 2px solid #004400;
+            width: 350px;
+            padding: 25px;
+            margin: 100px auto;
+            text-align: center;
+            box-shadow: 0 0 15px #00ff00;
+        }
+
+        #search {
+            background: #001100;
+            color: var(--hacker-green);
+            border: 1px solid #004400;
+            padding: 8px;
+            width: 300px;
+            margin: 15px;
+        }
+
+        /* New Features */
+        .activity-bar {
+            height: 4px;
+            background: #004400;
+            margin-top: 10px;
+            position: relative;
+        }
+        
+        .activity-level {
+            height: 100%;
+            background: #00ff00;
+            width: var(--activity);
+        }
+
+        .encryption-status {
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            font-size: 0.8em;
+            color: #00ff00;
+        }
+
+        .loading {
+            border: 3px solid #004400;
+            border-top: 3px solid #00ff00;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-panel" id="login">
+        <h3>⸸ OPERATION EYE OF HORUS ⸸</h3>
+        <input type="password" id="tokenInput" 
+               placeholder="Enter Cryptographic Token" 
+               style="margin: 15px; padding: 8px; width: 80%;">
+        <button onclick="initializeSystem()" 
+                style="background: #002200; color: #00ff00; 
+                       border: 1px solid #004400; padding: 8px 20px;">
+            INITIALIZE SYSTEM
+        </button>
+        <div id="loading" class="loading" style="display: none;"></div>
+    </div>
+
+    <div id="dashboard" style="display: none;">
+        <div style="padding: 20px; background: #000; border-bottom: 2px solid #004400;">
+            <h2>ACTIVE ENDPOINTS: <span id="count">0</span></h2>
+            <div style="color: #00ff00;">
+                <span>🇮🇱: <span id="il-count">0</span></span> |
+                <span>🇲🇦: <span id="ma-count">0</span></span> |
+                <span>🇩🇿: <span id="dz-count">0</span></span>
+            </div>
+            <input type="text" id="search" placeholder="[SEARCH BY IP/COUNTRY]">
+        </div>
+        <div id="grid"></div>
+        <div id="stats" style="padding: 20px; border-top: 2px solid #004400;">
+            <h3>OPERATIONAL STATISTICS</h3>
+            <div id="connection-quality" style="height: 20px; background: #002200;">
+                <div style="height: 100%; background: #00ff00; width: 85%;"></div>
+            </div>
+            <div>ENCRYPTION STRENGTH: AES-256 (QUANTUM-RESISTANT)</div>
+        </div>
+    </div>
+
+<script>
+const VALID_TOKEN = "thedopmine";
+const endpoints = Array.from({length: 1000}, (_, index) => ({
+    id: index + 1,
+    country: ['il', 'ma', 'dz'][Math.floor(Math.random() * 3)],
+    status: Math.random() > 0.15 ? 'online' : 'offline',
+    ip: `10.${rand(255)}.${rand(255)}.${rand(255)}`,
+    lastPing: `${rand(60)}m ago`,
+    activity: Math.random() * 100,
+    compromised: Math.random() < 0.05
+}));
+
+function rand(max) { return Math.floor(Math.random() * max) }
+
+function initializeSystem() {
+    const tokenInput = document.getElementById('tokenInput');
+    const loading = document.getElementById('loading');
+    
+    if(tokenInput.value !== VALID_TOKEN) {
+        tokenInput.style.border = "1px solid #ff0000";
+        setTimeout(() => { tokenInput.style.border = "1px solid #004400"; }, 1000);
+        return;
+    }
+
+    loading.style.display = 'block';
+    setTimeout(() => {
+        document.getElementById('login').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        refreshGrid();
+        loading.style.display = 'none';
+    }, 2000);
+}
+
+function refreshGrid(filter = '') {
+    const filtered = endpoints.filter(device => 
+        device.ip.includes(filter) ||
+        device.country.includes(filter.toLowerCase()) ||
+        countryName(device.country).toLowerCase().includes(filter.toLowerCase())
+    );
+
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
+    
+    filtered.forEach(device => {
+        const card = document.createElement('div');
+        card.className = 'device-card';
+        card.innerHTML = `
+            <div class="status-indicator ${device.compromised ? 'compromised' : device.status}"></div>
+            <span style="color: ${device.compromised ? '#ffa500' : device.status === 'online' ? '#0f0' : '#f00'}">
+                ${device.ip} ${device.compromised ? '🚨' : ''}
+            </span>
+            <div class="flag" 
+                 style="background-image: url('https://flagcdn.com/${device.country}.svg')">
+            </div>
+            <div style="margin-top: 10px;">
+                <div>📍 ${countryName(device.country)} ${getLocationEmoji(device.country)}</div>
+                <div>📶 ${device.status.toUpperCase()}</div>
+                <div>🕒 Last Activity: ${device.lastPing}</div>
+                <div class="activity-bar">
+                    <div class="activity-level" style="width: ${device.activity}%"></div>
+                </div>
+                ${device.compromised ? '<div class="encryption-status">ENCRYPTION BREACHED</div>' : ''}
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+
+    updateCounters(filtered);
+}
+
+function updateCounters(filtered) {
+    document.getElementById('count').textContent = filtered.length;
+    document.getElementById('il-count').textContent = 
+        filtered.filter(d => d.country === 'il').length;
+    document.getElementById('ma-count').textContent = 
+        filtered.filter(d => d.country === 'ma').length;
+    document.getElementById('dz-count').textContent = 
+        filtered.filter(d => d.country === 'dz').length;
+}
+
+function countryName(code) {
+    return { 'il': 'Israel', 'ma': 'Morocco', 'dz': 'Algeria' }[code];
+}
+
+function getLocationEmoji(code) {
+    return { 'il': '🛡️', 'ma': 'ⵣ', 'dz': '⚔️' }[code];
+}
+
+// Auto-refresh every 30 seconds
+setInterval(() => {
+    endpoints.forEach(device => {
+        if(Math.random() < 0.05) device.status = device.status === 'online' ? 'offline' : 'online';
+        if(Math.random() < 0.02) device.compromised = !device.compromised;
+        device.lastPing = `${rand(60)}m ago`;
+        device.activity = Math.random() * 100;
+    });
+    refreshGrid(document.getElementById('search').value);
+}, 30000);
+
+document.getElementById('search').addEventListener('input', (e) => {
+    refreshGrid(e.target.value);
+});
+</script>
+</body>
+</html>
